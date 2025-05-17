@@ -1,0 +1,256 @@
+/* Base styles for the Trulia Clone */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Form elements */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  margin: 10px 0;
+}
+
+/* Thumb for Webkit */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 2px solid #f43f5e;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Thumb for Firefox */
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 2px solid #f43f5e;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Thumb for IE */
+input[type="range"]::-ms-thumb {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 2px solid #f43f5e;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Track for Firefox */
+input[type="range"]::-moz-range-track {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+
+/* Track for IE */
+input[type="range"]::-ms-track {
+  height: 8px;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+
+input[type="range"]::-ms-fill-lower {
+  background: #f43f5e;
+  border-radius: 8px;
+}
+
+input[type="range"]::-ms-fill-upper {
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+
+/* Focus styles */
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+}
+
+input[type="range"]:focus::-ms-thumb {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+}
+
+/* Mobile/touch device optimizations */
+@media (pointer: coarse) {
+  input[type="range"] {
+    height: 12px;
+  }
+  
+  input[type="range"]::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+  }
+  
+  input[type="range"]::-ms-thumb {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Animation utilities */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.hover\:shadow-lg:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Range Slider Styles */
+.range-slider {
+  position: relative;
+  height: 2rem;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.range-slider .track {
+  position: absolute;
+  width: 100%;
+  height: 0.5rem;
+  background: #e5e7eb;
+  border-radius: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.range-slider .range {
+  position: absolute;
+  height: 0.5rem;
+  background: #f43f5e;
+  border-radius: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.range-slider .thumb {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: white;
+  border: 2px solid #f43f5e;
+  border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 10;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.range-slider .thumb:active {
+  cursor: grabbing;
+}
+
+.range-slider .thumb:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+}
+
+.range-slider .thumb.left {
+  left: 0;
+}
+
+.range-slider .thumb.right {
+  right: 0;
+}
+
+/* Range Slider Touch Improvements */
+@media (pointer: coarse) {
+  .range-slider .thumb {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .range-slider {
+    height: 3rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  /* Increase the track height for easier targeting */
+  .range-slider .track {
+    height: 0.75rem;
+  }
+  
+  .range-slider .range {
+    height: 0.75rem;
+  }
+}
