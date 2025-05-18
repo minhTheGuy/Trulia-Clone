@@ -17,7 +17,7 @@ public class CorsConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
         
         // Specified origins
-        corsConfig.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        corsConfig.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000", "http://localhost:80", "http://localhost"));
         
         // Allow credentials
         corsConfig.setAllowCredentials(true);

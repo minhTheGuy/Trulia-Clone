@@ -71,7 +71,7 @@ public class PropertyServiceTest {
         property.setUpdatedAt(LocalDateTime.now());
 
         // Setup PropertyDTO
-        PropertyDTO propertyRequest = PropertyDTO.builder()
+        propertyDTO = PropertyDTO.builder()
                 .title("Beautiful House")
                 .description("A beautiful house in the city center")
                 .price(250000L)
