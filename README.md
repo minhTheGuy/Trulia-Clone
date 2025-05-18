@@ -107,7 +107,7 @@ trulia-clone/
    docker-compose up -d
    ```
 
-4. Truy cập ứng dụng tại http://localhost:3000
+4. Truy cập ứng dụng tại http://localhost:5173
 
 ### Chạy Cục Bộ (Phát Triển)
 
@@ -117,13 +117,7 @@ trulia-clone/
    mvn spring-boot:run
    ```
 
-2. Khởi động config server
-   ```bash
-   cd config-server
-   mvn spring-boot:run
-   ```
-
-3. Khởi động API gateway và các dịch vụ khác
+2. Khởi động API gateway và các dịch vụ khác
    ```bash
    cd api-gateway
    mvn spring-boot:run
@@ -131,7 +125,7 @@ trulia-clone/
    # Lặp lại cho các dịch vụ khác
    ```
 
-4. Khởi động frontend
+3. Khởi động frontend
    ```bash
    cd ck-frontend
    npm install
@@ -153,10 +147,6 @@ Tài liệu dịch vụ riêng lẻ có sẵn tại các điểm cuối tương 
 3. Commit thay đổi: `git commit -m 'Thêm tính năng'`
 4. Push lên nhánh: `git push origin tên-tính-năng`
 5. Gửi pull request
-
-## Giấy Phép
-
-Dự án này được cấp phép theo Giấy phép MIT - xem file LICENSE để biết chi tiết.
 
 ## Lời Cảm Ơn
 
