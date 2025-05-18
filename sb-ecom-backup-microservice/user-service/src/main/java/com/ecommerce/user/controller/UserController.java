@@ -82,10 +82,6 @@ public class UserController {
         return ResponseEntity.ok(exists);
     }
     
-    /**
-     * Updates a user's role (add or remove ROLE_SELLER)
-     * Only admin users can update roles
-     */
     @PutMapping("/{id}/roles")
     public ResponseEntity<UserDTO> updateUserRole(@PathVariable Long id, @RequestBody UpdateRoleDTO updateRoleDTO) {
         UserDTO updatedUser = userService.updateUserRole(id, updateRoleDTO);

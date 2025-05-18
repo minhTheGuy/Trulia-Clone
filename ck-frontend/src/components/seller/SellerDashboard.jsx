@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import PropertyListingTable from './PropertyListingTable';
 import PropertyForm from './PropertyForm';
 import ScheduledToursList from './ScheduledToursList';
+import TransactionList from './TransactionList';
 import { getPropertiesBySellerId } from '../../redux/slices/propertySlice';
 
 const SellerDashboard = () => {
@@ -60,6 +61,7 @@ const SellerDashboard = () => {
   const tabs = [
     { id: 'listings', label: 'Danh sách tin đăng' },
     { id: 'tours', label: 'Lịch tham quan' },
+    { id: 'transactions', label: 'Giao dịch thuê nhà' },
     { id: 'create', label: 'Tạo tin mới' },
     { id: 'statistics', label: 'Thống kê' }
   ];
@@ -93,14 +95,14 @@ const SellerDashboard = () => {
 
           {/* Tabs */}
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex" aria-label="Tabs">
+            <nav className="-mb-px flex flex-wrap" aria-label="Tabs">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => {
                     setActiveTab(tab.id);
                     if (tab.id === 'create' && editingProperty === null) {
-                      setEditingProperty(null); // Reset editing state when switching to create
+                      setEditingProperty(null);
                     }
                   }}
                   className={`${
@@ -124,6 +126,10 @@ const SellerDashboard = () => {
 
             {activeTab === 'tours' && (
               <ScheduledToursList />
+            )}
+
+            {activeTab === 'transactions' && (
+              <TransactionList />
             )}
 
             {activeTab === 'create' && (

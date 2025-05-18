@@ -452,4 +452,65 @@ public class TransactionServiceImpl implements TransactionService {
         
         return transactionMapper.mapToDTO(transaction);
     }
+
+    @Override
+    public TransactionStatsDTO getRevenueStatistics(String timeRange, Integer year, Integer month, Integer quarter) {
+        log.info("Getting revenue statistics for time range: {}, year: {}, month: {}, quarter: {}",
+                timeRange, year, month, quarter);
+
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        // Determine date range based on timeRange parameter
+        switch (timeRange.toUpperCase()) {
+            case "YEAR":
+                startDate = LocalDateTime.of(year, 1, 1, 0, 0);
+                endDate = LocalDateTime.of(year, 12, 31, 23, 59, 59);
+                break;
+            case "QUARTER":
+                if (quarter == null || quarter < 1 || quarter > 4) {
+                    throw new TransactionApiException(HttpStatus.BAD_REQUEST, "Valid quarter (1-4) is required");
+                }
+                startDate = LocalDateTime.of(year, (quarter - 1) * 3 + 1, 1, 0, 0);
+                endDate = quarter < 4
+                        ? LocalDateTime.of(year, quarter * 3 + 1, 1, 0, 0).minusNanos(1)
+                        : LocalDateTime.of(year, 12, 31, 23, 59, 59);
+                break;
+            case "MONTH":
+                if (month == null || month < 1 || month > 12) {
+                    throw new TransactionApiException(HttpStatus.BAD_REQUEST, "Valid month (1-12) is required");
+                }
+                startDate = LocalDateTime.of(year, month, 1, 0, 0);
+                endDate = month < 12
+                        ? LocalDateTime.of(year, month + 1, 1, 0, 0).minusNanos(1)
+                        : LocalDateTime.of(year, 12, 31, 23, 59, 59);
+                break;
+            default:
+                throw new TransactionApiException(HttpStatus.BAD_REQUEST,
+                        "Invalid timeRange. Use MONTH, QUARTER, or YEAR");
+        }
+
+        // Get total revenue for all transactions in the period
+        BigDecimal totalRevenue = transactionRepository.sumAmountByYearAndMonth(2025, 12);
+        if (totalRevenue == null) {
+            totalRevenue = BigDecimal.ZERO;
+        }
+
+        // Get revenue for completed transactions in the period
+        BigDecimal completedRevenue = transactionRepository.sumCompletedAmount();
+        if (completedRevenue == null) {
+            completedRevenue = BigDecimal.ZERO;
+        }
+
+        // Get transaction counts
+        long totalTransactions = transactionRepository.countByCreatedAtBetween(startDate, endDate);
+        long completedTransactions = transactionRepository.countByStatusAndCreatedAtBetween(
+                TransactionStatus.COMPLETED, startDate, endDate);
+
+        // Build and return the statistics DTO
+        return TransactionStatsDTO.builder()
+                .totalAmount(totalRevenue)
+                .completedAmount(completedRevenue)
+                .build();
+    }
 } 

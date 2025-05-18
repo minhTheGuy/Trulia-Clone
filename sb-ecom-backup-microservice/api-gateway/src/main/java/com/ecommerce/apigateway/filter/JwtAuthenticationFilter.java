@@ -45,31 +45,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     
-    // Updated exclusion list with proper patterns
-    private static final List<String> EXCLUDED_URLS = List.of(
-            "/",
-            "/dashboard",
-            "/info",
-            "/api",
-            "/actuator/**", 
-            "/debug/**",
-            "/api/auth/signin",
-            "/api/auth/signup",
-            "/api/auth/signout",
-            "/api/auth/public/**",
-            "/api/users/validate",
-            "/api/users/register",
-            "/api/users/signup",
-            "/api/users/public/**",
-            "/api/files/view/**",
-            "/images/**",
-            "/api/categories/public/**",
-            "/api/properties/public/**",
-            "/api/rentals/public/**",
-            "/api/transactions/public/**", 
-            "/api/favorites/public/**",
-            "/api/auth/verify/**"
-    );
 
     public JwtAuthenticationFilter() {
         super(Config.class);
@@ -83,14 +58,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             
             logger.debug("Processing request for path: {}", path);
 
-            // Skip authentication for excluded URLs
-            if (isExcludedUrl(path)) {
-                logger.debug("Path {} is excluded from authentication - skipping JWT verification", path);
-                return chain.filter(exchange);
-            }
-
-            logger.debug("Path {} requires authentication", path);
-            
             // Try to get JWT from various sources
             String token = extractJwtToken(exchange);
             
@@ -255,18 +222,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         
         logger.debug("No JWT token found in request");
         return null;
-    }
-
-    private boolean isExcludedUrl(String path) {
-        // Use AntPathMatcher for more reliable path matching
-        for (String pattern : EXCLUDED_URLS) {
-            if (pathMatcher.match(pattern, path)) {
-                logger.debug("Path '{}' excluded by pattern '{}'", path, pattern);
-                return true;
-            }
-        }
-        logger.debug("Path '{}' is not in exclusion list, authentication required", path);
-        return false;
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {

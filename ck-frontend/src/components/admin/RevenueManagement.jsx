@@ -1,4 +1,18 @@
 import { useState, useEffect } from 'react';
+import adminService from '../../services/adminService';
+import { toast } from 'react-toastify';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from 'recharts';
 
 const RevenueManagement = () => {
   const [loading, setLoading] = useState(true);
@@ -8,72 +22,49 @@ const RevenueManagement = () => {
   const [monthFilter, setMonthFilter] = useState(new Date().getMonth() + 1);
   const [quarterFilter, setQuarterFilter] = useState(Math.floor((new Date().getMonth() / 3) + 1));
 
-  // Mock data
-  const mockRevenueData = {
-    summary: {
-      totalRevenue: 2580000000,
-      comparedToPrevious: 15, // % increase from previous period
-      transactions: 126,
-      avgTransactionValue: 20476190,
-      pendingPayments: 3,
-      pendingValue: 75000000
-    },
-    bySource: [
-      { source: 'Tin rao vặt cao cấp', amount: 850000000, percentage: 32.9 },
-      { source: 'Tin đăng VIP', amount: 980000000, percentage: 38.0 },
-      { source: 'Dịch vụ môi giới', amount: 520000000, percentage: 20.2 },
-      { source: 'Quảng cáo', amount: 230000000, percentage: 8.9 }
-    ],
-    // Monthly revenue data for charts
-    monthlyData: [
-      { month: 'T1', revenue: 190000000 },
-      { month: 'T2', revenue: 210000000 },
-      { month: 'T3', revenue: 175000000 },
-      { month: 'T4', revenue: 220000000 },
-      { month: 'T5', revenue: 240000000 },
-      { month: 'T6', revenue: 195000000 },
-      { month: 'T7', revenue: 260000000 },
-      { month: 'T8', revenue: 235000000 },
-      { month: 'T9', revenue: 285000000 },
-      { month: 'T10', revenue: 310000000 },
-      { month: 'T11', revenue: 260000000 },
-      { month: 'T12', revenue: 0 }
-    ],
-    // Recent transactions
-    recentTransactions: [
-      { id: 1, date: '2023-11-15', user: 'truongnguyen', type: 'Tin VIP', amount: 15000000, status: 'completed' },
-      { id: 2, date: '2023-11-14', user: 'anhtuan', type: 'Quảng cáo', amount: 5000000, status: 'completed' },
-      { id: 3, date: '2023-11-13', user: 'huongtran', type: 'Tin cao cấp', amount: 8000000, status: 'completed' },
-      { id: 4, date: '2023-11-12', user: 'thanhle', type: 'Dịch vụ môi giới', amount: 25000000, status: 'pending' },
-      { id: 5, date: '2023-11-10', user: 'minhvu', type: 'Tin VIP', amount: 15000000, status: 'completed' }
-    ]
-  };
-
-  // Format currency values
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-  };
+  // State for revenue data
+  const [revenueData, setRevenueData] = useState(null);
+  const [revenueBySource, setRevenueBySource] = useState(null);
+  const [recentTransactions, setRecentTransactions] = useState([]);
 
   useEffect(() => {
-    // Simulating API fetch
-    const fetchData = async () => {
-      try {
-        // Would be replaced with actual API call
-        // const data = await adminService.getRevenueData(timeRange, yearFilter, monthFilter, quarterFilter);
-        
-        // For now, using mock data
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-      } catch (err) {
-        setError('Có lỗi xảy ra khi tải dữ liệu doanh thu');
-        setLoading(false);
-      }
-    };
-    
-    setLoading(true);
-    fetchData();
+    fetchRevenueData();
   }, [timeRange, yearFilter, monthFilter, quarterFilter]);
+
+  const fetchRevenueData = async () => {
+    setLoading(true);
+    try {
+      // Fetch all revenue data in parallel
+      const [statistics, sourceData, transactions] = await Promise.all([
+        adminService.getRevenueStatistics(timeRange, yearFilter, monthFilter, quarterFilter),
+        adminService.getRevenueBySource(timeRange, yearFilter, monthFilter, quarterFilter),
+        adminService.getTransactions({ 
+          page: 0, 
+          size: 5,
+          sortBy: 'createdAt',
+          sortDir: 'desc'
+        })
+      ]);
+
+      setRevenueData(statistics);
+      setRevenueBySource(sourceData);
+      setRecentTransactions(transactions.content);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching revenue data:', error);
+      setError('Có lỗi xảy ra khi tải dữ liệu doanh thu');
+      toast.error('Không thể tải dữ liệu doanh thu. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('vi-VN', { 
+      style: 'currency', 
+      currency: 'VND' 
+    }).format(value);
+  };
 
   if (loading) {
     return (
@@ -175,7 +166,6 @@ const RevenueManagement = () => {
         </div>
       </div>
 
-      {/* Tổng quan doanh thu */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
@@ -190,23 +180,13 @@ const RevenueManagement = () => {
                   <dt className="text-sm font-medium text-gray-500 truncate">Tổng doanh thu</dt>
                   <dd className="flex items-baseline">
                     <div className="text-2xl font-semibold text-gray-900">
-                      {formatCurrency(mockRevenueData.summary.totalRevenue)}
+                      {formatCurrency(revenueData?.totalRevenue || 0)}
                     </div>
-                    {mockRevenueData.summary.comparedToPrevious > 0 ? (
-                      <div className="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                        <svg className="self-center flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                          <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                        <span className="sr-only">Tăng</span>
-                        {mockRevenueData.summary.comparedToPrevious}%
-                      </div>
-                    ) : (
-                      <div className="ml-2 flex items-baseline text-sm font-semibold text-red-600">
-                        <svg className="self-center flex-shrink-0 h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                          <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        <span className="sr-only">Giảm</span>
-                        {Math.abs(mockRevenueData.summary.comparedToPrevious)}%
+                    {revenueData?.percentageChange && (
+                      <div className={`ml-2 flex items-baseline text-sm font-semibold ${
+                        revenueData.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        <span>{revenueData.percentageChange}%</span>
                       </div>
                     )}
                   </dd>
@@ -226,8 +206,8 @@ const RevenueManagement = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Giao dịch thành công</dt>
-                  <dd className="text-2xl font-semibold text-gray-900">{mockRevenueData.summary.transactions}</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Số giao dịch</dt>
+                  <dd className="text-2xl font-semibold text-gray-900">{revenueData?.totalTransactions || 0}</dd>
                 </dl>
               </div>
             </div>
@@ -245,7 +225,9 @@ const RevenueManagement = () => {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Giá trị trung bình</dt>
-                  <dd className="text-2xl font-semibold text-gray-900">{formatCurrency(mockRevenueData.summary.avgTransactionValue)}</dd>
+                  <dd className="text-2xl font-semibold text-gray-900">
+                    {formatCurrency(revenueData?.averageTransactionValue || 0)}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -264,7 +246,7 @@ const RevenueManagement = () => {
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Chờ thanh toán</dt>
                   <dd className="text-2xl font-semibold text-gray-900">
-                    {mockRevenueData.summary.pendingPayments} ({formatCurrency(mockRevenueData.summary.pendingValue)})
+                    {revenueData?.pendingTransactions || 0} ({formatCurrency(revenueData?.pendingAmount || 0)})
                   </dd>
                 </dl>
               </div>
@@ -273,50 +255,43 @@ const RevenueManagement = () => {
         </div>
       </div>
 
-      {/* Phân tích theo nguồn thu */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Doanh thu theo nguồn</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h4 className="text-lg font-medium text-gray-900 mb-4">Biểu đồ doanh thu</h4>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={revenueData?.timeSeriesData || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip formatter={(value) => formatCurrency(value)} />
+                <Legend />
+                <Line type="monotone" dataKey="revenue" name="Doanh thu" stroke="#3B82F6" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className="border-t border-gray-200">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="space-y-4">
-              {mockRevenueData.bySource.map((item, index) => (
-                <div key={index}>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-500">{item.source}</span>
-                    <span className="text-sm font-medium text-gray-900">{formatCurrency(item.amount)} ({item.percentage}%)</span>
-                  </div>
-                  <div className="mt-1 relative">
-                    <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                      <div 
-                        style={{ width: `${item.percentage}%` }} 
-                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
-                          index % 4 === 0 ? 'bg-blue-500' : 
-                          index % 4 === 1 ? 'bg-green-500' : 
-                          index % 4 === 2 ? 'bg-indigo-500' : 
-                          'bg-yellow-500'
-                        }`}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h4 className="text-lg font-medium text-gray-900 mb-4">Doanh thu theo nguồn</h4>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={revenueBySource?.data || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="source" />
+                <YAxis />
+                <Tooltip formatter={(value) => formatCurrency(value)} />
+                <Legend />
+                <Bar dataKey="amount" name="Doanh thu" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Danh sách giao dịch gần đây */}
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
           <h3 className="text-lg leading-6 font-medium text-gray-900">Giao dịch gần đây</h3>
-          <button
-            type="button"
-            className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Xem tất cả
-          </button>
         </div>
         <div className="border-t border-gray-200">
           <div className="flow-root">
@@ -334,25 +309,28 @@ const RevenueManagement = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {mockRevenueData.recentTransactions.map((transaction) => (
+                    {recentTransactions.map((transaction) => (
                       <tr key={transaction.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0">
                           <div className="font-medium text-gray-900">#{transaction.id}</div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{transaction.date}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{transaction.user}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {new Date(transaction.createdAt).toLocaleDateString('vi-VN')}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{transaction.userName}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{transaction.type}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">{formatCurrency(transaction.amount)}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
+                          {formatCurrency(transaction.amount)}
+                        </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm">
-                          {transaction.status === 'completed' ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Hoàn thành
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Chờ xử lý
-                            </span>
-                          )}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
+                            transaction.status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {transaction.status === 'COMPLETED' ? 'Hoàn thành' :
+                             transaction.status === 'PROCESSING' ? 'Đang xử lý' : 'Đã hủy'}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -360,22 +338,6 @@ const RevenueManagement = () => {
                 </table>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Phần hiển thị biểu đồ có thể được thêm vào sau với thư viện như Chart.js, Recharts, etc. */}
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-yellow-700">
-              Biểu đồ trực quan sẽ được triển khai với thư viện Chart.js hoặc Recharts để hiển thị dữ liệu theo thời gian.
-            </p>
           </div>
         </div>
       </div>

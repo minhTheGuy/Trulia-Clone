@@ -95,34 +95,39 @@ public class StripeServiceImpl implements StripeService {
     @Override
     public PaymentIntent createPaymentIntent(BigDecimal amount, String currency, Map<String, Object> metadata) throws StripeException {
         log.info("Creating payment intent for amount: {} {}", amount, currency);
-        
-        // Convert BigDecimal to cents/smallest currency unit for Stripe
-        long amountInCents = amount.multiply(new BigDecimal(100)).longValue();
-        
+
+        long amountInSmallestUnit;
+        if (currency.equalsIgnoreCase("vnd")) {
+            // VND is a zero-decimal currency, don't multiply by 100
+            amountInSmallestUnit = amount.longValue();
+        } else {
+            // For currencies with decimal places (USD, EUR, etc.)
+            amountInSmallestUnit = amount.multiply(new BigDecimal(100)).longValue();
+        }
+
         PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
-                .setAmount(amountInCents)
+                .setAmount(amountInSmallestUnit)
                 .setCurrency(currency.toLowerCase())
                 .setAutomaticPaymentMethods(
-                    PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                        .setEnabled(true)
-                        .build()
+                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                .setEnabled(true)
+                                .build()
                 );
-        
-        // Add metadata if provided
+
         PaymentIntentCreateParams params = paramsBuilder.build();
-        
+
         // Create the payment intent
         PaymentIntent paymentIntent = PaymentIntent.create(params);
-        
-        // If metadata provided, update the payment intent with metadata
+
+        // Add metadata if provided
         if (metadata != null && !metadata.isEmpty()) {
             Map<String, String> stripeMetadata = new HashMap<>();
             metadata.forEach((key, value) -> stripeMetadata.put(key, String.valueOf(value)));
-            
+
             PaymentIntent.retrieve(paymentIntent.getId())
-                .update(Map.of("metadata", stripeMetadata));
+                    .update(Map.of("metadata", stripeMetadata));
         }
-        
+
         log.info("Created payment intent: {}", paymentIntent.getId());
         return paymentIntent;
     }

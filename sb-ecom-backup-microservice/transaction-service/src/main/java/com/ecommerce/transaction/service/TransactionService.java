@@ -54,4 +54,6 @@ public interface TransactionService {
     
     // Extend a rental transaction
     TransactionDTO extendRental(Long id, RentalExtensionRequest extensionRequest);
+
+    TransactionStatsDTO getRevenueStatistics(String timeRange, Integer year, Integer month, Integer quarter);
 } 

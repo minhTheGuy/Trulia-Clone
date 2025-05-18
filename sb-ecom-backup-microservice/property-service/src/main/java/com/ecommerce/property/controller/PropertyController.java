@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.ecommerce.property.payload.dto.PropertyDTO;
 import com.ecommerce.property.service.PropertyService;
-import com.ecommerce.property.util.CategoryUtil;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,25 +35,14 @@ public class PropertyController {
 
     private final PropertyService propertyService;
 
-    /**
-     * Tạo property mới với đường dẫn mới, đơn giản hơn
-     */
     @PostMapping("/create")
     public ResponseEntity<PropertyDTO> createProperty(@Valid @RequestBody PropertyDTO propertyDTO) {
         logger.info("Creating new property with category ID: {}", propertyDTO.getCategoryId());
-        
-        // Validate categoryId exists
-        if (propertyDTO.getCategoryId() != null && !CategoryUtil.isValidCategoryId(propertyDTO.getCategoryId())) {
-            return ResponseEntity.badRequest().build();
-        }
-        
+
         PropertyDTO savedPropertyDTO = propertyService.addProperty(propertyDTO.getCategoryId(), propertyDTO);
         return new ResponseEntity<>(savedPropertyDTO, HttpStatus.CREATED);
     }
 
-    /**
-     * Giữ lại API cũ để tương thích ngược
-     */
     @PostMapping("/categories/{categoryId}/property")
     public ResponseEntity<PropertyDTO> addProperty(@Valid @RequestBody PropertyDTO propertyDTO,
             @PathVariable Long categoryId) {

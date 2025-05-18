@@ -180,9 +180,9 @@ public class PaymentServiceImpl implements PaymentService {
                 paymentDTO = paymentMapper.mapToDTO(confirmedPayment);
                 paymentDTO.setClientSecret("test_client_secret");
             } else {
-                // Tạo payment intent như cũ nếu không có payment_method_id
+                // Pass "vnd" as the currency parameter
                 PaymentIntent paymentIntent = stripeService.createPaymentIntent(
-                        request.getAmount(), "usd", metadata);
+                        request.getAmount(), "vnd", metadata);
                 
                 // Get the client secret from the payment intent - this is crucial for the frontend
                 String clientSecret = paymentIntent.getClientSecret();

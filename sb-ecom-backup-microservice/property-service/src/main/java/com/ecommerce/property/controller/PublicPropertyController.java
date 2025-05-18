@@ -53,8 +53,8 @@ public class PublicPropertyController {
         return new ResponseEntity<>(propertyResponse, HttpStatus.OK);
     }
 
-    @GetMapping("/keyword/{keyword}")
-    public ResponseEntity<PropertyResponse> getPropertiesByKeyword(@PathVariable String keyword,
+    @GetMapping("/keyword")
+    public ResponseEntity<PropertyResponse> getPropertiesByKeyword(@RequestParam(name = "keyword", defaultValue = "", required = false) String keyword,
             @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
             @RequestParam(name = "sortBy", defaultValue = "price", required = false) String sortBy,
@@ -96,9 +96,9 @@ public class PublicPropertyController {
             @RequestParam(name = "sortBy", defaultValue = "price", required = false) String sortBy,
             @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder
     ) {
-        logger.info("Public request for properties by location - city: {}, state: {}, zipcode: {}", 
-                     city != null ? city : "n/a", 
-                     state != null ? state : "n/a", 
+        logger.info("Public request for properties by location - city: {}, state: {}, zipcode: {}",
+                     city != null ? city : "n/a",
+                     state != null ? state : "n/a",
                      zipcode != null ? zipcode : "n/a");
         PropertyResponse propertyResponse = propertyService.getPropertiesByLocation(
                 city, state, zipcode, pageNumber, pageSize, sortBy, sortOrder);

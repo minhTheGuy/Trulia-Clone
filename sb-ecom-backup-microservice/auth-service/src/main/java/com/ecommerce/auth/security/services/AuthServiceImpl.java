@@ -122,17 +122,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String refreshToken(String token) {
-        // Kiểm tra token có hợp lệ không
-        if (!validateToken(token)) {
-            logger.warn("Cannot refresh an invalid token");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-        }
-        
         try {
             // Lấy username từ token
             String username = jwtUtils.getUserNameFromJwtToken(token);
 
-            if (username == null) {
+            if (username != null) {
                 UserDto userDto = userServiceClient.getUserByUsername(username).getBody();
                 
                 // Tạo token mới

@@ -118,19 +118,66 @@ const adminService = {
     }
   },
 
-  getTransactions: async (pageNumber = 0, pageSize = 10, status = 'all') => {
+  getTransactions: async (filters) => {
     try {
-      let url = `${API_URL}transactions?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-      if (status !== 'all') {
-        url += `&status=${status}`;
-      }
-      
-      const response = await axios.get(url, {
+      const response = await axios.get(`${API_URL}transactions`, {
+        headers: authHeader(),
+        params: {
+          ...filters,
+          startDate: null,
+          endDate: null
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Failed to fetch transactions';
+    }
+  },
+
+  getTransactionStats: async (timeRange) => {
+    try {
+      const response = await axios.get(`${API_URL}/transactions/stats`, {
+        headers: authHeader(),
+        params: { timeRange }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Failed to fetch transaction statistics';
+    }
+  },
+
+  getRevenueStats: async (timeRange) => {
+    try {
+      const response = await axios.get(`${API_URL}/revenue/stats`, {
+        headers: authHeader(),
+        params: { timeRange }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Failed to fetch revenue statistics';
+    }
+  },
+
+  updateTransactionStatus: async (transactionId, status) => {
+    try {
+      const response = await axios.put(`${API_URL}/transactions/${transactionId}/status`, 
+        { status },
+        { headers: authHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Failed to update transaction status';
+    }
+  },
+
+  getTransactionById: async (transactionId) => {
+    try {
+      const response = await axios.get(`${API_URL}/transactions/${transactionId}`, {
         headers: authHeader()
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || 'Lỗi khi lấy danh sách giao dịch';
+      throw error.response?.data?.message || 'Failed to fetch transaction details';
     }
   }
 };

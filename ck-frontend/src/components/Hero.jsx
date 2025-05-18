@@ -38,9 +38,12 @@ const Hero = () => {
     }, 8000) // 8 seconds timeout
     
     try {
+      // Encode the search query properly for Vietnamese characters
+      const encodedKeyword = encodeURIComponent(searchQuery.trim())
+      
       // Use the appropriate search type parameter based on the selected tab
       const searchParams = {
-        keyword: searchQuery,
+        keyword: encodedKeyword,
         pageNumber: 0,
         pageSize: 10,
         sortBy: 'price',
@@ -56,7 +59,7 @@ const Hero = () => {
         searchParams.status = 'SOLD';
       }
       
-      // Dispatch search action
+      // Dispatch search action with encoded parameters
       await dispatch(searchPropertiesByKeyword(searchParams)).unwrap()
       
       // Clear timeout on success
@@ -65,8 +68,8 @@ const Hero = () => {
         timeoutRef.current = null
       }
       
-      // Navigate to homepage with search results only after successful dispatch
-      navigate(`/?keyword=${encodeURIComponent(searchQuery)}&type=${searchType}`)
+      // Navigate to homepage with encoded search results
+      navigate(`/?keyword=${encodedKeyword}&type=${searchType}`)
     } catch (error) {
       console.error("Search error:", error)
       
@@ -78,8 +81,8 @@ const Hero = () => {
       
       setErrorMessage(error.response?.data?.message || 'Có lỗi khi tìm kiếm. Vui lòng thử lại sau.')
       
-      // Still navigate to show the error in PropertyList
-      navigate(`/?keyword=${encodeURIComponent(searchQuery)}&type=${searchType}&error=true`)
+      // Still navigate to show the error with encoded parameters
+      navigate(`/?keyword=${encodeURIComponent(searchQuery.trim())}&type=${searchType}&error=true`)
     } finally {
       setIsSubmitting(false)
     }

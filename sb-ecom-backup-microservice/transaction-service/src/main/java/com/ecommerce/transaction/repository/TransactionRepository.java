@@ -72,14 +72,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                              @Param("endDate") LocalDateTime endDate);
     
     // Advanced search
-    @Query("SELECT t FROM Transaction t WHERE " +
-           "(:propertyId IS NULL OR t.propertyId = :propertyId) AND " +
-           "(:buyerId IS NULL OR t.buyerId = :buyerId) AND " +
-           "(:sellerId IS NULL OR t.sellerId = :sellerId) AND " +
-           "(:status IS NULL OR t.status = :status) AND " +
-           "(:type IS NULL OR t.transactionType = :type) AND " +
-           "(:startDate IS NULL OR t.createdAt >= :startDate) AND " +
-           "(:endDate IS NULL OR t.createdAt <= :endDate)")
+    @Query(value = """
+            SELECT t FROM Transaction t 
+            WHERE (:propertyId IS NULL OR t.propertyId = :propertyId) 
+            AND (:buyerId IS NULL OR t.buyerId = :buyerId) 
+            AND (:sellerId IS NULL OR t.sellerId = :sellerId) 
+            AND (:status IS NULL OR t.status = :status) 
+            AND (:type IS NULL OR t.transactionType = :type) 
+            AND (CAST(:startDate AS timestamp) IS NULL OR t.createdAt >= :startDate) 
+            AND (CAST(:endDate AS timestamp) IS NULL OR t.createdAt <= :endDate)
+            """)
     Page<Transaction> searchTransactions(
             @Param("propertyId") Long propertyId,
             @Param("buyerId") Long buyerId,
@@ -89,4 +91,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
-} 
+
+    long countByCreatedAtBetween(LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+
+    long countByStatusAndCreatedAtBetween(TransactionStatus status, LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+}

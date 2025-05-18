@@ -118,23 +118,29 @@ const RentalPaymentForm = ({ property, onSuccess }) => {
       };
       
       const result = await paymentService.processRentalPayment(paymentData);
+      console.log("Payment result:", result);
 
       // 4. Lưu thông tin thuê nhà nếu thanh toán thành công
-      await rentalService.rentProperty({
-        propertyId: property.id,
-        userId: user.id,
-        sellerId: property.userId,
-        rentalPeriod,
-        rentalStartDate,
-        rentalEndDate,
-        amount: calculateTotalAmount(),
-        paymentId: result.paymentId || result.id,
-        transactionId
-      });
+      if (result && (result.status === 'PROCESSING' || result.status === 'COMPLETED' || result.status === 'SUCCESS')) {
+        await rentalService.rentProperty({
+          propertyId: property.id,
+          userId: user.id,
+          sellerId: property.userId,
+          startDate: rentalStartDate,
+          endDate: rentalEndDate,
+          amount: calculateTotalAmount(),
+          paymentId: result.id,
+          transactionId: result.transactionId
+        });
 
-      onSuccess(result);
+        // Gọi callback onSuccess với kết quả thanh toán
+        onSuccess(result);
+      } else {
+        throw new Error('Thanh toán không thành công');
+      }
     } catch (error) {
       console.error('Payment error:', error);
+      toast.error(error.message || 'Không thể xử lý thanh toán. Vui lòng thử lại sau.');
       setError(error.message || 'Không thể xử lý thanh toán. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
@@ -332,11 +338,21 @@ const PropertyDetails = () => {
   const handlePaymentSuccess = (paymentResult) => {
     // Store payment result details if needed
     console.log('Payment successful:', paymentResult);
+    
+    // Hiển thị thông báo dựa vào trạng thái thanh toán
+    if (paymentResult.status === 'PROCESSING') {
+      toast.info("Giao dịch đang được xử lý. Chúng tôi sẽ thông báo khi hoàn tất.");
+    } else if (paymentResult.status === 'COMPLETED' || paymentResult.status === 'SUCCESS') {
+      toast.success("Giao dịch thuê nhà thành công!");
+    }
+
+    // Cập nhật UI
     setPaymentSuccess(true);
     setShowPaymentForm(false);
     setRentalSuccess(true);
-    // Optionally, update property status to RENTED
-    toast.success("Giao dịch thuê nhà thành công!");
+
+    // Hiển thị chi tiết giao dịch
+    toast.info(`Mã giao dịch: ${paymentResult.transactionId}`);
   };
 
   const handleTourSchedule = async (tourData) => {

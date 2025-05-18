@@ -30,7 +30,6 @@ import com.ecommerce.user.payload.request.LoginRequest;
 import com.ecommerce.user.payload.request.SignupRequest;
 import com.ecommerce.user.repository.RoleRepository;
 import com.ecommerce.user.repository.UserRepository;
-import com.ecommerce.user.service.UserPreferenceService;
 import com.ecommerce.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,6 @@ public class UserServiceImpl implements UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final UserPreferenceService userPreferenceService;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -71,9 +69,6 @@ public class UserServiceImpl implements UserService {
 
         // Save user
         User savedUser = userRepository.save(user);
-
-        // Create default preferences for the user
-        userPreferenceService.createDefaultPreferences(savedUser.getId());
 
         // Map entity to DTO and return
         return convertToDTO(savedUser);
@@ -408,21 +403,105 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDTO updatePassword(Long userId, String newPassword) {
         logger.info("Updating password for user id: {}", userId);
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         // Encode the new password
         String encodedPassword = passwordEncoder.encode(newPassword);
-        
+
         // Update the password
         user.setPassword(encodedPassword);
-        
+
         // Save the updated user
         User updatedUser = userRepository.save(user);
-        
+
         logger.info("Password updated successfully for user: {}", user.getUsername());
-        
+
+        return convertToDTO(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserDTO updateSellerRole(Long userId, boolean sellerRole) {
+        logger.info("Updating seller role for user id: {} to {}", userId, sellerRole);
+
+        // Find the user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Find the ROLE_USER and ROLE_SELLER roles
+        Role userRole = roleRepository.findByRoleName(RoleName.ROLE_USER)
+                .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_USER not found"));
+
+        Role sellerRoleEntity = roleRepository.findByRoleName(RoleName.ROLE_SELLER)
+                .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_SELLER not found"));
+
+        // Get current roles
+        Set<Role> currentRoles = new HashSet<>(user.getRoles());
+
+        // Always ensure the user has the ROLE_USER role
+        currentRoles.add(userRole);
+
+        // Add or remove ROLE_SELLER based on the request
+        if (sellerRole) {
+            currentRoles.add(sellerRoleEntity);
+            logger.debug("Adding ROLE_SELLER to user: {}", user.getUsername());
+        } else {
+            currentRoles.remove(sellerRoleEntity);
+            logger.debug("Removing ROLE_SELLER from user: {}", user.getUsername());
+        }
+
+        // Update user roles
+        user.setRoles(currentRoles);
+
+        // Save the user
+        User updatedUser = userRepository.save(user);
+        logger.info("Successfully updated seller role for user: {}", user.getUsername());
+
+        // Return updated user DTO
+        return convertToDTO(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserDTO updateBrokerRole(Long userId, boolean brokerRole) {
+        logger.info("Updating broker role for user id: {} to {}", userId, brokerRole);
+
+        // Find the user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Find the ROLE_USER and ROLE_BROKER roles
+        Role userRole = roleRepository.findByRoleName(RoleName.ROLE_USER)
+                .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_USER not found"));
+
+        Role brokerRoleEntity = roleRepository.findByRoleName(RoleName.ROLE_BROKER)
+                .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_BROKER not found"));
+
+        // Get current roles
+        Set<Role> currentRoles = new HashSet<>(user.getRoles());
+
+        // Always ensure the user has the ROLE_USER role
+        currentRoles.add(userRole);
+
+        // Add or remove ROLE_BROKER based on the request
+        if (brokerRole) {
+            currentRoles.add(brokerRoleEntity);
+            logger.debug("Adding ROLE_BROKER to user: {}", user.getUsername());
+        } else {
+            currentRoles.remove(brokerRoleEntity);
+            logger.debug("Removing ROLE_BROKER from user: {}", user.getUsername());
+        }
+
+        // Update user roles
+        user.setRoles(currentRoles);
+
+        // Save the user
+        User updatedUser = userRepository.save(user);
+        logger.info("Successfully updated broker role for user: {}", user.getUsername());
+
+        // Return updated user DTO
         return convertToDTO(updatedUser);
     }
 
@@ -445,4 +524,4 @@ public class UserServiceImpl implements UserService {
                 .map(role -> role.getRoleName().name())
                 .collect(Collectors.toSet());
     }
-} 
+}

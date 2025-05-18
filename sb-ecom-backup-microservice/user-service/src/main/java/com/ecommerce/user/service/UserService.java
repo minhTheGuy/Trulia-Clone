@@ -42,6 +42,11 @@ public interface UserService {
     // Role management
     UserDTO updateUserRole(Long userId, UpdateRoleDTO updateRoleDTO);
     
+    // Single role updates
+    UserDTO updateSellerRole(Long userId, boolean sellerRole);
+
+    UserDTO updateBrokerRole(Long userId, boolean brokerRole);
+
     // User status management for admin
     UserDTO updateUserStatus(Long userId, boolean active);
     
@@ -60,4 +65,5 @@ public interface UserService {
     AuthUserDTO activateUserAccount(Long id);
 
     AuthUserDTO getAuthUserById(Long id);
-} 
+}
+

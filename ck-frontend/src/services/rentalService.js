@@ -2,7 +2,7 @@ import axios from 'axios';
 import authHeader from './authHeader';
 
 // API base URL
-const API_URL = 'http://localhost:8080/api/rentals/';
+const API_URL = 'http://localhost:8080/api/properties/rentals';
 
 // Axios instance configuration
 const api = axios.create({

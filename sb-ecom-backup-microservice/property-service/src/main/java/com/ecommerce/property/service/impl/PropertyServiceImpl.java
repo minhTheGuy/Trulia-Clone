@@ -1,67 +1,52 @@
 package com.ecommerce.property.service.impl;
 
+import com.ecommerce.property.exceptions.APIException;
+import com.ecommerce.property.exceptions.ResourceNotFoundException;
+import com.ecommerce.property.model.Property;
+import com.ecommerce.property.payload.dto.*;
+import com.ecommerce.property.payload.request.PropertyRequest;
+import com.ecommerce.property.payload.response.PagedResponse;
+import com.ecommerce.property.payload.response.PropertyResponse;
+import com.ecommerce.property.repository.PropertyRepository;
+import com.ecommerce.property.service.PropertyService;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.ecommerce.property.service.PropertyService;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.core.io.ByteArrayResource;
-
-import com.ecommerce.property.exceptions.APIException;
-import com.ecommerce.property.exceptions.ResourceNotFoundException;
-import com.ecommerce.property.model.Property;
-import com.ecommerce.property.payload.dto.AddressDetailsDTO;
-import com.ecommerce.property.payload.dto.AgentDTO;
-import com.ecommerce.property.payload.dto.CategoryDTO;
-import com.ecommerce.property.payload.dto.LocationDTO;
-import com.ecommerce.property.payload.dto.NeighborhoodDTO;
-import com.ecommerce.property.payload.dto.PropertyDTO;
-import com.ecommerce.property.payload.response.PropertyResponse;
-import com.ecommerce.property.repository.PropertyRepository;
-import com.ecommerce.property.util.CategoryUtil;
-
-import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
-
 @Service
 @RequiredArgsConstructor
 public class PropertyServiceImpl implements PropertyService {
 
-    private final PropertyRepository propertyRepository;
-    
-    private final ModelMapper modelMapper;
-    
-    private final WebClient.Builder webClientBuilder;
-    
-    private final RestTemplate restTemplate;
-    
     private static final Logger logger = LoggerFactory.getLogger(PropertyServiceImpl.class);
-    
+    private final PropertyRepository propertyRepository;
+    private final ModelMapper modelMapper;
+    private final WebClient.Builder webClientBuilder;
+    private final RestTemplate restTemplate;
     @Value("${project.image}")
     private String path;
-    
+
     @Value("${image.base.url}")
     private String imageBaseUrl;
 
@@ -70,21 +55,13 @@ public class PropertyServiceImpl implements PropertyService {
         // Check if the property already exists
         boolean isPropertyNotPresent = true; // This should use repository check
 
-        // Validate category exists
-        CategoryDTO category = CategoryUtil.getCategoryById(categoryId);
-        
-        if (category == null) {
-            throw new APIException("Category not found with id: " + categoryId);
-        }
-
         if (isPropertyNotPresent) {
             // Set the categoryId
             propertyDTO.setCategoryId(categoryId);
-            propertyDTO.setCategoryName(category.getName());
-            
+
             // Use our mapper to convert DTO to entity
             Property property = mapToProperty(propertyDTO);
-            
+
             // Set default image if none provided
             if (property.getImages() == null || property.getImages().isEmpty()) {
                 List<String> defaultImages = new ArrayList<>();
@@ -144,13 +121,12 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
+    public PagedResponse<PropertyDTO> getAllProperties(int pageNumber, int pageSize, String sortBy, String sortDir) {
+        return null;
+    }
+
+    @Override
     public PropertyResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        // Validate category exists
-        CategoryDTO category = CategoryUtil.getCategoryById(categoryId);
-        
-        if (category == null) {
-            throw new APIException("Category not found with id: " + categoryId);
-        }
 
         // Create Pageable with sorting
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
@@ -167,7 +143,6 @@ public class PropertyServiceImpl implements PropertyService {
         List<PropertyDTO> propertyDTOs = properties.stream()
                 .map(property -> {
                     PropertyDTO dto = mapToPropertyDTO(property);
-                    dto.setCategoryName(category.getName());
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -216,8 +191,8 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public PropertyResponse searchPropertyByFilters(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder,
-                                                   Double minPrice, Double maxPrice, Integer minBedrooms, Integer minBathrooms,
-                                                   Double minSquareFootage, String propertyType, Boolean forSale, Boolean forRent) {
+                                                    Double minPrice, Double maxPrice, Integer minBedrooms, Integer minBathrooms,
+                                                    Double minSquareFootage, String propertyType, Boolean forSale, Boolean forRent) {
         // Create Pageable with sorting
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -257,25 +232,17 @@ public class PropertyServiceImpl implements PropertyService {
 
         // Set the ID to ensure update, not insert
         propertyDTO.setId(propertyId);
-        
+
         // Use our mapper to convert DTO to entity, preserving existing data
         Property property = mapToProperty(propertyDTO);
 
         // Update category if provided
-        if (propertyDTO.getCategoryId() != null) {
-            // Validate category exists
-            CategoryDTO category = CategoryUtil.getCategoryById(propertyDTO.getCategoryId());
-            
-            if (category == null) {
-                throw new APIException("Category not found with id: " + propertyDTO.getCategoryId());
-            }
-            
-            property.setCategoryId(propertyDTO.getCategoryId());
-        }
+
+        property.setCategoryId(propertyDTO.getCategoryId());
 
         // Save updated property
         Property updatedProperty = propertyRepository.save(property);
-        
+
         // Return converted DTO
         return mapToPropertyDTO(updatedProperty);
     }
@@ -296,6 +263,26 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
+    public PagedResponse<PropertyDTO> searchPropertiesByKeyword(String keyword, int pageNumber, int pageSize, String sortBy, String sortDir) {
+        return null;
+    }
+
+    @Override
+    public PagedResponse<PropertyDTO> getPropertiesByCategory(Long categoryId, int pageNumber, int pageSize, String sortBy, String sortDir) {
+        return null;
+    }
+
+    @Override
+    public PagedResponse<PropertyDTO> getPropertiesBySellerId(Long sellerId, int pageNumber, int pageSize, String sortBy, String sortDir) {
+        return null;
+    }
+
+    @Override
+    public Long countPropertiesBySellerId(Long sellerId) {
+        return 0L;
+    }
+
+    @Override
     public PropertyDTO updatePropertyImages(Long propertyId, MultipartFile[] images) throws IOException {
         // Validate property exists
         Property propertyFromDb = propertyRepository.findById(propertyId)
@@ -306,10 +293,10 @@ public class PropertyServiceImpl implements PropertyService {
             // Prepare multipart request
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            
+
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("propertyId", propertyId.toString());
-            
+
             // Add files to the request
             for (MultipartFile file : images) {
                 if (!file.isEmpty()) {
@@ -323,30 +310,31 @@ public class PropertyServiceImpl implements PropertyService {
                     body.add("files", resource);
                 }
             }
-            
+
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-            
+
             // Call file-service API
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                "http://file-service/api/files/property/images",
-                HttpMethod.POST,
-                requestEntity,
-                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+                    "http://file-service/api/files/property/images",
+                    HttpMethod.POST,
+                    requestEntity,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
+                    }
             );
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // Extract image URLs from response
                 List<String> imageUrls = response.getBody().stream()
-                    .filter(item -> item.containsKey("url") && item.get("url") != null)
-                    .map(item -> item.get("url").toString())
-                    .collect(Collectors.toList());
-                
+                        .filter(item -> item.containsKey("url") && item.get("url") != null)
+                        .map(item -> item.get("url").toString())
+                        .collect(Collectors.toList());
+
                 // Update property with new image URLs
                 propertyFromDb.setImages(imageUrls);
                 Property updatedProperty = propertyRepository.save(propertyFromDb);
-                
+
                 logger.info("Updated property {} with {} new images", propertyId, imageUrls.size());
-                
+
                 // Return updated property DTO
                 return mapToPropertyDTO(updatedProperty);
             } else {
@@ -397,7 +385,7 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PropertyDTO> getPropertiesBySellerId(Long userId) {
         logger.info("Fetching properties for seller with user ID: {}", userId);
         List<Property> properties = propertyRepository.findByUserId(userId);
-        
+
         return properties.stream()
                 .map(this::mapToPropertyDTO)
                 .collect(Collectors.toList());
@@ -416,8 +404,8 @@ public class PropertyServiceImpl implements PropertyService {
     @Transactional
     public PropertyDTO incrementPropertyViews(Long id) {
         Property property = propertyRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
+
         property.setTotalWatched(property.getTotalWatched() + 1);
         Property updatedProperty = propertyRepository.save(property);
         return mapToPropertyDTO(updatedProperty);
@@ -446,7 +434,7 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setImages(property.getImages());
         dto.setStatus(property.getStatus());
         dto.setDaysOnMarket(property.getDaysOnMarket());
-        
+
         // Map Agent info
         AgentDTO agentDTO = new AgentDTO();
         agentDTO.setName(property.getAgentName());
@@ -455,13 +443,13 @@ public class PropertyServiceImpl implements PropertyService {
         agentDTO.setImage(property.getAgentImage());
         agentDTO.setCompany(property.getAgentCompany());
         dto.setAgent(agentDTO);
-        
+
         // Map Location
         LocationDTO locationDTO = new LocationDTO();
         locationDTO.setLat(property.getLatitude());
         locationDTO.setLng(property.getLongitude());
         dto.setLocation(locationDTO);
-        
+
         // Map Neighborhood
         NeighborhoodDTO neighborhoodDTO = new NeighborhoodDTO();
         neighborhoodDTO.setName(property.getNeighborhoodName());
@@ -471,7 +459,7 @@ public class PropertyServiceImpl implements PropertyService {
         neighborhoodDTO.setTransitScore(property.getTransitScore());
         neighborhoodDTO.setBikeScore(property.getBikeScore());
         dto.setNeighborhood(neighborhoodDTO);
-        
+
         // Map AddressDetails
         AddressDetailsDTO addressDetailsDTO = new AddressDetailsDTO();
         addressDetailsDTO.setStreet(property.getStreet());
@@ -480,22 +468,14 @@ public class PropertyServiceImpl implements PropertyService {
         addressDetailsDTO.setZip(property.getZip());
         addressDetailsDTO.setNeighborhood(property.getNeighborhoodName());
         dto.setAddressDetails(addressDetailsDTO);
-        
+
         // Map backend-specific properties
         dto.setCategoryId(property.getCategoryId());
         dto.setForSale(property.isForSale());
         dto.setForRent(property.isForRent());
         dto.setRentPrice(property.getRentPrice());
         dto.setUserId(property.getUserId());
-        
-        // Set categoryName using CategoryUtil
-        if (property.getCategoryId() != null) {
-            CategoryDTO categoryDTO = CategoryUtil.getCategoryById(property.getCategoryId());
-            if (categoryDTO != null) {
-                dto.setCategoryName(categoryDTO.getName());
-            }
-        }
-        
+
         return dto;
     }
 
@@ -517,7 +497,7 @@ public class PropertyServiceImpl implements PropertyService {
         property.setImages(dto.getImages());
         property.setStatus(dto.getStatus());
         property.setDaysOnMarket(dto.getDaysOnMarket());
-        
+
         // Map Agent info if provided
         if (dto.getAgent() != null) {
             property.setAgentName(dto.getAgent().getName());
@@ -526,13 +506,13 @@ public class PropertyServiceImpl implements PropertyService {
             property.setAgentImage(dto.getAgent().getImage());
             property.setAgentCompany(dto.getAgent().getCompany());
         }
-        
+
         // Map Location if provided
         if (dto.getLocation() != null) {
             property.setLatitude(dto.getLocation().getLat());
             property.setLongitude(dto.getLocation().getLng());
         }
-        
+
         // Map Neighborhood if provided
         if (dto.getNeighborhood() != null) {
             property.setNeighborhoodName(dto.getNeighborhood().getName());
@@ -542,7 +522,7 @@ public class PropertyServiceImpl implements PropertyService {
             property.setTransitScore(dto.getNeighborhood().getTransitScore());
             property.setBikeScore(dto.getNeighborhood().getBikeScore());
         }
-        
+
         // Map AddressDetails if provided
         if (dto.getAddressDetails() != null) {
             property.setStreet(dto.getAddressDetails().getStreet());
@@ -551,14 +531,14 @@ public class PropertyServiceImpl implements PropertyService {
             property.setZip(dto.getAddressDetails().getZip());
             // Note: neighborhood name is already set from neighborhood object
         }
-        
+
         // Map backend-specific properties
         property.setCategoryId(dto.getCategoryId());
         property.setForSale(dto.isForSale());
         property.setForRent(dto.isForRent());
         property.setRentPrice(dto.getRentPrice());
         property.setUserId(dto.getUserId());
-        
+
         return property;
     }
 }

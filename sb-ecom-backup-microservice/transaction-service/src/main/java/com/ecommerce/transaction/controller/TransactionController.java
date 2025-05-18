@@ -180,4 +180,30 @@ public class TransactionController {
         PagedResponse<TransactionDTO> report = transactionService.getMonthlyTransactionReport(year, month, page, size);
         return ResponseEntity.ok(report);
     }
+
+    @GetMapping("/sellers/{sellerId}")
+    public ResponseEntity<PagedResponse<TransactionDTO>> getTransactionsBySellerId(
+            @PathVariable Long sellerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        log.info("Fetching transactions for seller ID: {}", sellerId);
+        PagedResponse<TransactionDTO> transactions = transactionService.getAllTransactions(
+                page, size, sortBy, sortDir, null, null, sellerId, null, null, null, null);
+        return ResponseEntity.ok(transactions);
+    }
+
+    @GetMapping("/revenue/statistics")
+    public ResponseEntity<TransactionStatsDTO> getRevenueStatistics(
+            @RequestParam String timeRange,
+            @RequestParam Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer quarter) {
+
+        log.info("Fetching revenue statistics for time range: {}", timeRange);
+        TransactionStatsDTO stats = transactionService.getRevenueStatistics(timeRange, year, month, quarter);
+        return ResponseEntity.ok(stats);
+    }
 } 

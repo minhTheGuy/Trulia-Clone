@@ -21,6 +21,8 @@ import SavedHomes from './pages/SavedHomes'
 import SavedSearches from './pages/SavedSearches'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 export default function App() {
   const dispatch = useDispatch()
@@ -124,72 +126,86 @@ export default function App() {
   )
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <Routes>
-          {/* Auth routes without header/footer */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/verify" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          
-          {/* Main routes with header/footer */}
-          <Route path="/" element={<Layout><HomePageComponent /></Layout>} />
-          <Route path="/property/:id" element={<Layout><PropertyDetails /></Layout>} />
-          
-          {/* Protected routes WITH layout */}
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Layout><UserProfile /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Layout><UserProfile /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Layout><SellerDashboard /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <Layout><AdminDashboard /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/add-property" element={
-            <ProtectedRoute>
-              <Layout><PropertyForm /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/edit-property/:id" element={
-            <ProtectedRoute>
-              <Layout><PropertyForm /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/my-properties" element={
-            <ProtectedRoute>
-              <Layout><SellerDashboard /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/saved-homes" element={
-            <ProtectedRoute>
-              <Layout><SavedHomes /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/saved-searches" element={
-            <ProtectedRoute>
-              <Layout><SavedSearches /></Layout>
-            </ProtectedRoute>
-          } />
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col">
+          <Routes>
+            {/* Auth routes without header/footer */}
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/verify" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            
+            {/* Main routes with header/footer */}
+            <Route path="/" element={<Layout><HomePageComponent /></Layout>} />
+            <Route path="/property/:id" element={<Layout><PropertyDetails /></Layout>} />
+            
+            {/* Protected routes WITH layout */}
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Layout><UserProfile /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Layout><UserProfile /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Layout><SellerDashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <Layout><AdminDashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/add-property" element={
+              <ProtectedRoute>
+                <Layout><PropertyForm /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/edit-property/:id" element={
+              <ProtectedRoute>
+                <Layout><PropertyForm /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/my-properties" element={
+              <ProtectedRoute>
+                <Layout><SellerDashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/saved-homes" element={
+              <ProtectedRoute>
+                <Layout><SavedHomes /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/saved-searches" element={
+              <ProtectedRoute>
+                <Layout><SavedSearches /></Layout>
+              </ProtectedRoute>
+            } />
 
-          {/* 404 route */}
-          <Route path="/404" element={<Layout><NotFound /></Layout>} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+            {/* 404 route */}
+            <Route path="/404" element={<Layout><NotFound /></Layout>} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </>
   )
 }

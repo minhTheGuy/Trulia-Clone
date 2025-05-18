@@ -137,8 +137,20 @@ const propertyService = {
   searchPropertiesByKeyword: async (keyword, pageNumber = 0, pageSize = 10, sortBy = 'price', sortOrder = 'asc', signal) => {
     try {
       const config = {
-        signal: signal // Pass abort signal to request
+        signal // Pass abort signal to request
       };
+      
+      // Decode the keyword before using it in the URL since it's already encoded
+      const decodedKeyword = decodeURIComponent(keyword);
+      
+      // Create URL parameters object
+      const params = new URLSearchParams({
+        pageNumber: pageNumber.toString(),
+        pageSize: pageSize.toString(),
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+        keyword: decodedKeyword
+      });
       
       const response = await api.get(
         `public/keyword/${keyword}?pageNumber=${pageNumber}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
