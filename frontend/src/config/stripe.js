@@ -1,0 +1,5 @@
+const STRIPE_CONFIG = {
+    PUBLISHABLE_KEY: 'pk_test_51ROgtQR5Ad8YeKfV6ls2aEK1yDnUksGvlEn1Zbj9usi0faG2Rte3SgpNAJgZVwWt7BZCqUVOGxakVtwJHOQ9qYgK00GzDVFDiP',
+};
+
+export default STRIPE_CONFIG; 
